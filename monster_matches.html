@@ -22,15 +22,19 @@
 </head>
 <body class="bg-black text-white">
 
-    <!-- Header & Navigation --><header class="fixed top-0 left-0 right-0 z-50 bg-black bg-opacity-70 backdrop-blur-md shadow-lg">
+    <!-- Header & Navigation (UPDATED: Added P&P Button and standard colors) -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-black bg-opacity-70 backdrop-blur-md shadow-lg">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="index.html" class="flex items-center space-x-2">
                 <img src="https://grgames26.sirv.com/GRG%20website%20images/Gather%20Round%20Games%20logo.jpeg" alt="Gather Round Games Logo" class="h-8 rounded-full shadow-md">
+                <span class="text-xl font-bold title-font text-orange-500 hidden sm:block">Gather Round Games</span>
             </a>
-            <div class="space-x-4">
-                <a href="index.html" class="text-[#FFA07A] hover:text-[#FF7F50] transition-colors">Home</a>
-                <a href="race_to_bed.html" class="text-[#FFA07A] hover:text-[#FF7F50] transition-colors">Race to Bed</a>
-                <a href="#details" class="text-[#FFA07A] hover:text-[#FF7F50] transition-colors">Details</a>
+            <div class="space-x-4 flex items-center">
+                <a href="index.html" class="text-orange-500 hover:text-orange-400 transition-colors font-semibold">Home</a>
+                <a href="race_to_bed.html" class="text-orange-500 hover:text-orange-400 transition-colors font-semibold">Race to Bed</a>
+                <a href="#details" class="text-orange-500 hover:text-orange-400 transition-colors font-semibold">Details</a>
+                <!-- New P&P Button in Nav -->
+                <a href="print_and_play.html" class="text-white bg-orange-500 py-1 px-3 rounded-full hover:bg-orange-600 transition-colors font-semibold">P&P</a>
             </div>
         </nav>
     </header>
@@ -40,15 +44,21 @@
         <section class="bg-gray-900 text-white p-8 md:p-0 flex items-center justify-center relative overflow-hidden min-h-[400px]">
             <div class="container mx-auto flex flex-col md:flex-row items-center justify-between text-center md:text-left relative z-10 px-6 py-8 md:py-16">
                 
-                <!-- LEFT SECTION: Title, Description, and CTA -->
+                <!-- LEFT SECTION: Title, Description, and CTAs (UPDATED) -->
                 <div class="md:w-1/2 md:pr-12 order-2 md:order-1">
-                    <h1 class="text-5xl md:text-6xl font-bold title-font leading-tight text-[#FFA07A]">Monster Matches</h1>
+                    <h1 class="text-5xl md:text-6xl font-bold title-font leading-tight text-orange-500">Monster Matches</h1>
                     <!-- UPDATED SUBTITLE FOR MONSTER VS MONSTER THEME -->
                     <p class="mt-4 text-lg md:text-xl font-semibold">A monster vs monster game where you have to choose your monsters best quality to beat your opponent (2 players)</p>
                     
-                    <a href="#details" class="mt-8 inline-block bg-[#FFA07A] text-black font-semibold py-3 px-8 rounded-full shadow-lg hover:bg-[#FF7F50] transition-transform transform hover:scale-105">
-                        See Game Details
-                    </a>
+                    <!-- New PnP Button added next to details button -->
+                    <div class="flex flex-col sm:flex-row gap-4 mt-8 justify-center md:justify-start">
+                        <a href="#details" class="inline-block bg-white text-black font-semibold py-3 px-8 rounded-full shadow-lg hover:bg-gray-200 transition-transform transform hover:scale-105">
+                            See Game Details
+                        </a>
+                        <a href="https://payhip.com/b/DJr6R" target="_blank" class="inline-block bg-orange-500 text-black font-semibold py-3 px-8 rounded-full shadow-lg hover:bg-orange-600 transition-transform transform hover:scale-105">
+                            Download Print & Play!
+                        </a>
+                    </div>
                 </div>
                 
                 <!-- RIGHT SECTION: Placeholder for positioning -->
@@ -59,8 +69,9 @@
             <img src="https://grgames26.sirv.com/GRG%20website%20images/subnover_Cute_cartoon_monster_trading_card_illustration_big_e_7fe63f19-50f0-415b-9423-ac514cf924fc_0%20(1).png" alt="Close-up illustration of a cute cartoon monster card (Box Art)" class="absolute top-0 right-0 w-2/5 h-full object-contain object-right z-0 hidden md:block">
         </section>
 
-        <!-- Game Details Section --><section id="details" class="container mx-auto px-6 py-16">
-            <h2 class="text-3xl md:text-5xl font-bold text-center mb-12 title-font text-[#FFA07A]">Deep Dive into Monster Matches</h2>
+        <!-- Game Details Section -->
+        <section id="details" class="container mx-auto px-6 py-16">
+            <h2 class="text-3xl md:text-5xl font-bold text-center mb-12 title-font text-orange-500">Deep Dive into Monster Matches</h2>
 
             <!-- Detail Strip 1: Game Mechanics (Orange Background, Black Text) -->
             <div class="bg-orange-600 text-black p-6 md:p-10 rounded-xl mb-12 shadow-2xl">
@@ -103,7 +114,8 @@
         </section>
     </main>
 
-    <!-- Footer --><footer class="bg-black text-white p-8">
+    <!-- Footer -->
+    <footer class="bg-black text-white p-8 border-t border-gray-800">
         <div class="container mx-auto text-center">
             <p>&copy; 2024 Gather Round Games. All rights reserved.</p>
             <p class="mt-2 text-sm">Contact: josh@gatherroundgames.co.uk</p>
