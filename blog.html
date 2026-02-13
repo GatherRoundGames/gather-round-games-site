@@ -86,7 +86,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Your Firebase Configuration
         const firebaseConfig = {
@@ -107,24 +107,28 @@
         let currentUser = null;
         let isAdminView = false;
 
-        // AUTHENTICATION WITH RETRY LOGIC
+        // AUTHENTICATION WITH ROBUST RETRY
         const initAuth = async () => {
             let retries = 5;
             let delay = 1000;
             
             while (retries > 0) {
                 try {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                    return; // Success
+                    // Try Anonymous sign-in first as it is more reliable for simple public apps
+                    await signInAnonymously(auth);
+                    console.log("Authenticated successfully");
+                    return; 
                 } catch (error) {
+                    console.warn(`Auth attempt failed. Retries left: ${retries-1}`, error);
                     retries--;
                     if (retries === 0) {
-                        console.error("Auth failed after all retries:", error);
-                        document.getElementById('blog-posts-container').innerHTML = `<div class="text-center py-20 text-red-500">Failed to connect to the database. Please check your Firebase configuration or enable Anonymous Auth in the Firebase Console.</div>`;
+                        const container = document.getElementById('blog-posts-container');
+                        if (container) {
+                            container.innerHTML = `<div class="text-center py-20 text-red-500">
+                                <p class="font-bold">Connection Error</p>
+                                <p class="text-sm">Please ensure "Anonymous Authentication" is enabled in your Firebase Console under Build > Authentication > Sign-in method.</p>
+                            </div>`;
+                        }
                     } else {
                         await new Promise(res => setTimeout(res, delay));
                         delay *= 2;
@@ -135,17 +139,20 @@
 
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
-            if (user) loadPosts();
+            if (user) {
+                loadPosts();
+            }
         });
 
+        // Initialize connection
         initAuth();
 
         // ADMIN PANEL TOGGLE
         window.toggleAdmin = () => {
             isAdminView = !isAdminView;
             const panel = document.getElementById('admin-panel');
-            panel.classList.toggle('admin-hidden');
-            if (currentUser) loadPosts(); // Re-render to show/hide delete buttons
+            if (panel) panel.classList.toggle('admin-hidden');
+            if (currentUser) loadPosts(); 
         };
 
         // DELETE POST
@@ -162,16 +169,23 @@
 
         // SAVE POST
         document.getElementById('save-post-btn').addEventListener('click', async () => {
-            if (!currentUser) return;
+            if (!currentUser) {
+                alert("You must be connected to publish posts.");
+                return;
+            }
 
             const title = document.getElementById('post-title').value;
             const category = document.getElementById('post-category').value || "Update";
             const image = document.getElementById('post-image').value;
             const excerpt = document.getElementById('post-excerpt').value;
 
-            if (!title || !excerpt) return;
+            if (!title || !excerpt) {
+                alert("Please fill in the title and excerpt.");
+                return;
+            }
 
             try {
+                // Correct path following RULE 1: /artifacts/{appId}/public/data/{collectionName}
                 const blogRef = collection(db, 'artifacts', appId, 'public', 'data', 'blog_posts');
                 await addDoc(blogRef, {
                     title,
@@ -179,7 +193,8 @@
                     image,
                     excerpt,
                     date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-                    createdAt: serverTimestamp()
+                    createdAt: serverTimestamp(),
+                    authorId: currentUser.uid
                 });
 
                 document.getElementById('post-title').value = '';
@@ -188,24 +203,35 @@
                 document.getElementById('post-image').value = '';
                 window.toggleAdmin();
             } catch (err) {
-                console.error("Error saving:", err);
+                console.error("Error saving post:", err);
+                alert("Failed to save post. Check console for details.");
             }
         });
 
         // LOAD POSTS
         function loadPosts() {
             if (!currentUser) return;
+            
+            // Path follows RULE 1
             const blogRef = collection(db, 'artifacts', appId, 'public', 'data', 'blog_posts');
             
+            // Note: We avoid complex queries like orderBy() here to satisfy RULE 2 (no indexes required)
             onSnapshot(blogRef, (snapshot) => {
                 const container = document.getElementById('blog-posts-container');
+                if (!container) return;
+
                 if (snapshot.empty) {
                     container.innerHTML = `<div class="text-center py-20 text-gray-600">No blog posts yet. Use Editor Mode to add one!</div>`;
                     return;
                 }
 
+                // Map data and then sort in memory (JavaScript) per RULE 2
                 const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-                    .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                    .sort((a, b) => {
+                        const timeA = a.createdAt?.toMillis() || 0;
+                        const timeB = b.createdAt?.toMillis() || 0;
+                        return timeB - timeA;
+                    });
 
                 container.innerHTML = posts.map(post => `
                     <article class="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 hover:border-orange-500/50 transition-colors group relative">
@@ -214,13 +240,13 @@
                         ` : ''}
                         ${post.image ? `
                             <div class="h-64 bg-gray-800 overflow-hidden">
-                                <img src="${post.image}" alt="${post.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <img src="${post.image}" alt="${post.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.style.display='none'">
                             </div>
                         ` : ''}
                         <div class="p-8">
                             <div class="flex items-center text-sm text-orange-500 font-bold mb-4 space-x-4">
-                                <span>${post.date}</span>
-                                <span class="bg-orange-500/10 px-2 py-1 rounded">${post.category}</span>
+                                <span>${post.date || 'Recently'}</span>
+                                <span class="bg-orange-500/10 px-2 py-1 rounded">${post.category || 'Update'}</span>
                             </div>
                             <h2 class="text-3xl font-bold mb-4 group-hover:text-orange-500 transition-colors">${post.title}</h2>
                             <p class="text-gray-400 text-lg leading-relaxed mb-6">${post.excerpt}</p>
@@ -229,9 +255,13 @@
                     </article>
                 `).join('');
             }, (error) => {
-                console.error("Snapshot error:", error);
-                if (error.code === 'permission-denied') {
-                    container.innerHTML = `<div class="text-center py-20 text-red-500">Database permission denied. Please ensure your Firestore rules allow access.</div>`;
+                console.error("Firestore Snapshot error:", error);
+                const container = document.getElementById('blog-posts-container');
+                if (container) {
+                    container.innerHTML = `<div class="text-center py-20 text-red-500">
+                        <p>Database Error: ${error.message}</p>
+                        <p class="text-xs mt-2 text-gray-500">Ensure Firestore is in "Test Mode" or has rules allowing public access to the /artifacts/ path.</p>
+                    </div>`;
                 }
             });
         }
