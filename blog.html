@@ -25,9 +25,7 @@
                 <span class="text-xl font-bold title-font text-orange-500 hidden sm:block">Gather Round Games</span>
             </a>
             <div class="space-x-4 flex items-center">
-                <a href="index.html#games" class="text-orange-500 hover:text-orange-400 transition-colors font-semibold">Our Games</a>
-                <a href="index.html#about" class="text-orange-500 hover:text-orange-400 transition-colors font-semibold">About</a>
-                <a href="index.html#newsletter" class="text-orange-500 hover:text-orange-400 transition-colors font-semibold">Newsletter</a>
+                <a href="index.html" class="text-orange-500 hover:text-orange-400 transition-colors font-semibold">Home</a>
                 <a href="blog.html" class="text-orange-500 hover:text-orange-400 transition-colors font-semibold underline decoration-2 underline-offset-4">Blog</a>
                 <a href="print_and_play.html" class="text-white bg-orange-500 py-1 px-3 rounded-full hover:bg-orange-600 transition-colors font-semibold">P&P</a>
             </div>
@@ -41,11 +39,16 @@
                 <p class="text-xl text-gray-400 max-w-2xl mx-auto">Insights, development updates, and stories from the world of Gather Round Games.</p>
             </div>
 
+            <div id="connection-error" class="hidden max-w-2xl mx-auto mb-8 bg-red-900/30 border border-red-500 text-red-200 p-4 rounded-xl text-center">
+                <p class="font-bold">Database Connection Issue</p>
+                <p class="text-sm">If you've already created the database, ensure your Security Rules allow public reads on the 'artifacts' path.</p>
+            </div>
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
                 <div id="blog-posts-container" class="lg:col-span-2 space-y-12">
                     <div class="flex flex-col items-center justify-center py-20 space-y-4">
                         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                        <p class="text-gray-500">Connecting to the database...</p>
+                        <p class="text-gray-500">Connecting to the vault...</p>
                     </div>
                 </div>
 
@@ -66,7 +69,8 @@
                             <input id="post-category" type="text" placeholder="Category" class="w-full bg-black border border-gray-700 rounded-lg px-4 py-2 text-white outline-none focus:border-orange-500">
                             <input id="post-image" type="text" placeholder="Image URL" class="w-full bg-black border border-gray-700 rounded-lg px-4 py-2 text-white outline-none focus:border-orange-500">
                             <textarea id="post-excerpt" placeholder="Short excerpt..." class="w-full bg-black border border-gray-700 rounded-lg px-4 py-2 h-32 text-white outline-none focus:border-orange-500"></textarea>
-                            <button id="save-post-btn" class="w-full bg-orange-500 text-black font-bold py-2 rounded-lg hover:bg-orange-400 transition-colors">Publish Post</button>
+                            <button id="save-post-btn" class="w-full bg-orange-500 text-black font-bold py-2 rounded-lg hover:bg-orange-400 transition-colors disabled:opacity-50">Publish Post</button>
+                            <p id="publish-status" class="text-xs text-center font-bold mt-2 hidden"></p>
                         </div>
                     </div>
                 </div>
@@ -83,7 +87,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB9w_JaPwVknHFh6sIAx5d-pAMhZzEgyOE",
@@ -98,27 +102,26 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'gather-round-games-blog';
+        const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'gather-round-games-official-blog';
 
         let user = null;
         let isAdminView = false;
         let unsubscribePosts = null;
 
-        // AUTHENTICATION (RULE 3 - with catch for token mismatch)
         const initAuth = async () => {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     try {
                         await signInWithCustomToken(auth, __initial_auth_token);
-                    } catch (tokenError) {
-                        console.warn("Custom token mismatch/error, falling back to anonymous sign-in.", tokenError);
-                        await signInAnonymously(auth);
+                    } catch (e) { 
+                        console.warn("Token auth failed, trying anonymous...");
+                        await signInAnonymously(auth); 
                     }
                 } else {
                     await signInAnonymously(auth);
                 }
             } catch (error) {
-                console.error("Critical Auth error:", error);
+                console.error("Auth init error:", error);
             }
         };
 
@@ -136,18 +139,26 @@
         };
 
         window.deletePost = async (postId) => {
-            if (!user) return;
+            if (!user || !confirm("Delete this story?")) return;
             try {
-                const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'blog_posts', postId);
-                await deleteDoc(docRef);
+                await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'blog_posts', postId));
             } catch (err) { console.error(err); }
         };
 
         document.getElementById('save-post-btn').addEventListener('click', async () => {
             if (!user) return;
+            
+            const btn = document.getElementById('save-post-btn');
+            const status = document.getElementById('publish-status');
             const title = document.getElementById('post-title').value;
             const excerpt = document.getElementById('post-excerpt').value;
+            
             if (!title || !excerpt) return;
+
+            btn.disabled = true;
+            status.textContent = "Publishing...";
+            status.classList.remove('hidden', 'text-red-500');
+            status.classList.add('text-orange-500');
 
             try {
                 const blogCollection = collection(db, 'artifacts', APP_ID, 'public', 'data', 'blog_posts');
@@ -162,9 +173,23 @@
                 });
 
                 document.getElementById('post-title').value = '';
+                document.getElementById('post-category').value = '';
+                document.getElementById('post-image').value = '';
                 document.getElementById('post-excerpt').value = '';
-                window.toggleAdmin();
-            } catch (err) { console.error("Save failed:", err); }
+                
+                status.textContent = "Success!";
+                setTimeout(() => {
+                    status.classList.add('hidden');
+                    if(isAdminView) window.toggleAdmin();
+                }, 1000);
+
+            } catch (err) { 
+                console.error("Save failed:", err);
+                status.textContent = "Error: Check Permissions";
+                status.classList.add('text-red-500');
+            } finally {
+                btn.disabled = false;
+            }
         });
 
         function loadPosts() {
@@ -174,11 +199,16 @@
             const blogCollection = collection(db, 'artifacts', APP_ID, 'public', 'data', 'blog_posts');
             
             unsubscribePosts = onSnapshot(blogCollection, (snapshot) => {
+                document.getElementById('connection-error').classList.add('hidden');
                 const container = document.getElementById('blog-posts-container');
                 if (!container) return;
 
                 if (snapshot.empty) {
-                    container.innerHTML = `<div class="text-center py-20 border-2 border-dashed border-gray-800 rounded-3xl"><p class="text-gray-600">No stories found in the vault.</p></div>`;
+                    container.innerHTML = `
+                        <div class="text-center py-20 border-2 border-dashed border-gray-800 rounded-3xl">
+                            <p class="text-gray-600 mb-2 text-lg font-bold uppercase tracking-widest">The Vault is Empty</p>
+                            <p class="text-gray-700 text-sm">Waiting for the first story to be told.</p>
+                        </div>`;
                     return;
                 }
 
@@ -191,21 +221,30 @@
 
                 container.innerHTML = posts.map(post => `
                     <article class="bg-gray-900 rounded-3xl overflow-hidden border border-gray-800 hover:border-orange-500/50 transition-all duration-300 group relative">
-                        ${isAdminView ? `<button onclick="deletePost('${post.id}')" class="absolute top-6 right-6 z-20 bg-red-600 px-4 py-2 rounded-full text-xs font-bold">Delete</button>` : ''}
-                        ${post.image ? `<div class="h-64 bg-gray-800"><img src="${post.image}" class="w-full h-full object-cover"></div>` : ''}
+                        ${isAdminView ? `<button onclick="deletePost('${post.id}')" class="absolute top-6 right-6 z-20 bg-red-600 px-4 py-2 rounded-full text-xs font-bold shadow-lg hover:scale-110 transition-transform">Delete</button>` : ''}
+                        ${post.image ? `<div class="h-64 bg-gray-800 overflow-hidden"><img src="${post.image}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.parentElement.style.display='none'"></div>` : ''}
                         <div class="p-8">
                             <div class="flex items-center text-xs mb-4">
                                 <span class="bg-orange-500 text-black px-2 py-1 rounded font-bold mr-3 uppercase">${post.category}</span>
                                 <span class="text-gray-500">${post.date}</span>
                             </div>
-                            <h2 class="text-2xl font-bold mb-4 title-font">${post.title}</h2>
-                            <p class="text-gray-400 mb-6">${post.excerpt}</p>
-                            <div class="text-orange-500 font-bold">Read More &rarr;</div>
+                            <h2 class="text-2xl font-bold mb-4 title-font group-hover:text-orange-500 transition-colors">${post.title}</h2>
+                            <p class="text-gray-400 mb-6 leading-relaxed">${post.excerpt}</p>
+                            <div class="text-orange-500 font-bold flex items-center group-hover:translate-x-2 transition-transform cursor-pointer">
+                                Read Story <span class="ml-2">&rarr;</span>
+                            </div>
                         </div>
                     </article>
                 `).join('');
             }, (error) => {
-                console.error("Snapshot error:", error);
+                console.error("Snapshot failed:", error);
+                if (error.code === 'permission-denied') {
+                    document.getElementById('connection-error').classList.remove('hidden');
+                }
+                const container = document.getElementById('blog-posts-container');
+                if (container) {
+                    container.innerHTML = `<p class="text-red-500 text-center py-10">Permission Denied. Please ensure Firestore Security Rules allow access to the path: <b>/artifacts/${APP_ID}/public/data/blog_posts</b></p>`;
+                }
             });
         }
     </script>
