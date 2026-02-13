@@ -17,7 +17,7 @@
 </head>
 <body class="bg-black text-white">
 
-    <!-- Header & Navigation (Synced with Index) -->
+    <!-- Header & Navigation -->
     <header class="fixed top-0 left-0 right-0 z-50 bg-black bg-opacity-70 backdrop-blur-md shadow-lg">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="index.html" class="flex items-center space-x-2">
@@ -58,7 +58,7 @@
                         <p class="font-medium">Welcome to our blog! This is where we share the creative process of making board games.</p>
                     </div>
 
-                    <!-- Post Control (Admin trigger) -->
+                    <!-- Post Control -->
                     <div class="text-center">
                         <button onclick="toggleAdmin()" class="text-xs text-gray-800 hover:text-gray-600 uppercase tracking-widest font-bold">Editor Mode</button>
                     </div>
@@ -113,26 +113,15 @@
         // AUTHENTICATION
         const initAuth = async () => {
             try {
-                // Try custom token first if it exists
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     try {
                         await signInWithCustomToken(auth, __initial_auth_token);
-                    } catch (tokenError) {
-                        console.warn("Custom token failed, falling back to anonymous:", tokenError);
-                        await signInAnonymously(auth);
-                    }
+                    } catch (e) { await signInAnonymously(auth); }
                 } else {
                     await signInAnonymously(auth);
                 }
             } catch (error) {
                 console.error("Auth failed:", error);
-                const container = document.getElementById('blog-posts-container');
-                if (container) {
-                    container.innerHTML = `<div class="text-center py-20 text-red-500 bg-red-500/10 rounded-xl p-6">
-                        <p class="font-bold">Authentication Error</p>
-                        <p class="text-sm">Please enable "Anonymous Authentication" in your Firebase console.</p>
-                    </div>`;
-                }
             }
         };
 
@@ -145,39 +134,27 @@
 
         initAuth();
 
-        // ADMIN PANEL TOGGLE
         window.toggleAdmin = () => {
             isAdminView = !isAdminView;
-            const panel = document.getElementById('admin-panel');
-            if (panel) panel.classList.toggle('admin-hidden');
+            document.getElementById('admin-panel').classList.toggle('admin-hidden');
             if (currentUser) loadPosts(); 
         };
 
-        // DELETE POST
         window.deletePost = async (postId) => {
-            if (!currentUser) return;
-            if (!confirm("Remove this post from the table?")) return;
+            if (!currentUser || !confirm("Remove this post?")) return;
             try {
-                const postRef = doc(db, 'artifacts', appId, 'public', 'data', 'blog_posts', postId);
-                await deleteDoc(postRef);
-            } catch (err) {
-                console.error("Delete failed:", err);
-            }
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'blog_posts', postId));
+            } catch (err) { console.error(err); }
         };
 
-        // SAVE POST
         document.getElementById('save-post-btn').addEventListener('click', async () => {
             if (!currentUser) return;
-
             const title = document.getElementById('post-title').value;
             const category = document.getElementById('post-category').value || "Update";
             const image = document.getElementById('post-image').value;
             const excerpt = document.getElementById('post-excerpt').value;
 
-            if (!title || !excerpt) {
-                alert("Title and content are required!");
-                return;
-            }
+            if (!title || !excerpt) return alert("Fill in title and excerpt!");
 
             try {
                 const blogRef = collection(db, 'artifacts', appId, 'public', 'data', 'blog_posts');
@@ -191,81 +168,53 @@
                     authorId: currentUser.uid
                 });
 
-                // Reset form
                 document.getElementById('post-title').value = '';
                 document.getElementById('post-category').value = '';
                 document.getElementById('post-excerpt').value = '';
                 document.getElementById('post-image').value = '';
                 window.toggleAdmin();
-            } catch (err) {
-                console.error("Error saving:", err);
-                alert("Failed to publish post.");
-            }
+            } catch (err) { console.error(err); }
         });
 
-        // LOAD POSTS
         function loadPosts() {
             if (unsubscribePosts) unsubscribePosts();
-            
             const blogRef = collection(db, 'artifacts', appId, 'public', 'data', 'blog_posts');
             
-            unsubscribePosts = onSnapshot(blogRef, (snapshot) => {
+            // Added includeMetadataChanges: true to ensure the UI updates when the server timestamp is assigned
+            unsubscribePosts = onSnapshot(blogRef, { includeMetadataChanges: true }, (snapshot) => {
                 const container = document.getElementById('blog-posts-container');
                 if (!container) return;
 
                 if (snapshot.empty) {
-                    container.innerHTML = `<div class="text-center py-20 border-2 border-dashed border-gray-800 rounded-3xl">
-                        <p class="text-gray-600 text-lg">No stories yet. Turn on Editor Mode to start writing!</p>
-                    </div>`;
+                    container.innerHTML = `<div class="text-center py-20 border-2 border-dashed border-gray-800 rounded-3xl"><p class="text-gray-600">No stories yet.</p></div>`;
                     return;
                 }
 
-                // Sort in memory to avoid index requirements
-                const posts = snapshot.docs.map(doc => ({ 
-                    id: doc.id, 
-                    ...doc.data() 
-                })).sort((a, b) => {
-                    const timeA = a.createdAt?.seconds || 0;
-                    const timeB = b.createdAt?.seconds || 0;
-                    return timeB - timeA;
-                });
+                // IMPROVED SORTING: Handle pending timestamps (null values) by placing them at the top
+                const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                    .sort((a, b) => {
+                        const valA = a.createdAt?.seconds || Date.now() / 1000;
+                        const valB = b.createdAt?.seconds || Date.now() / 1000;
+                        return valB - valA;
+                    });
 
                 container.innerHTML = posts.map(post => `
                     <article class="bg-gray-900 rounded-3xl overflow-hidden border border-gray-800 hover:border-orange-500/50 transition-all duration-300 group relative">
-                        ${isAdminView ? `
-                            <button onclick="deletePost('${post.id}')" class="absolute top-6 right-6 z-20 bg-red-600/90 hover:bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-full transition-colors">Delete</button>
-                        ` : ''}
-                        
-                        ${post.image ? `
-                            <div class="h-72 bg-gray-800 overflow-hidden">
-                                <img src="${post.image}" alt="${post.title}" 
-                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                                     onerror="this.parentElement.style.display='none'">
-                            </div>
-                        ` : ''}
-                        
+                        ${isAdminView ? `<button onclick="deletePost('${post.id}')" class="absolute top-6 right-6 z-20 bg-red-600/90 hover:bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-full">Delete</button>` : ''}
+                        ${post.image ? `<div class="h-72 bg-gray-800 overflow-hidden"><img src="${post.image}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onerror="this.parentElement.style.display='none'"></div>` : ''}
                         <div class="p-10">
                             <div class="flex items-center text-sm mb-6">
-                                <span class="bg-orange-500 text-black px-3 py-1 rounded-full font-bold mr-4">${post.category || 'News'}</span>
-                                <span class="text-gray-500">${post.date || 'Recent'}</span>
+                                <span class="bg-orange-500 text-black px-3 py-1 rounded-full font-bold mr-4">${post.category}</span>
+                                <span class="text-gray-500">${post.date}</span>
                             </div>
                             <h2 class="text-3xl md:text-4xl font-bold mb-6 group-hover:text-orange-500 transition-colors title-font">${post.title}</h2>
                             <p class="text-gray-400 text-lg leading-relaxed mb-8">${post.excerpt}</p>
-                            <div class="flex items-center text-orange-500 font-bold hover:translate-x-2 transition-transform cursor-pointer">
-                                Read Full Story <span class="ml-2">&rarr;</span>
-                            </div>
+                            <div class="text-orange-500 font-bold cursor-pointer">Read Full Story &rarr;</div>
                         </div>
                     </article>
                 `).join('');
             }, (error) => {
                 console.error("Firestore error:", error);
-                const container = document.getElementById('blog-posts-container');
-                if (container) {
-                    container.innerHTML = `<div class="text-center py-20 text-red-400">
-                        <p class="text-xl font-bold">Unable to reach the database</p>
-                        <p class="text-sm mt-2 opacity-60">Check your internet connection or Firestore rules.</p>
-                    </div>`;
-                }
             });
         }
     </script>
