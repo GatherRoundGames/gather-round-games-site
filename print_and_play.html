@@ -3,138 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gather Round Games - Print & Play</title>
+    <title>Print & Play - Gather Round Games</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Varela+Round:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            scroll-behavior: smooth;
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .title-font { font-family: 'Varela Round', sans-serif; letter-spacing: 0.05em; }
+        .bg-grid {
+            background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0);
+            background-size: 40px 40px;
         }
-        .title-font {
-            font-family: 'Varela Round', sans-serif;
-            letter-spacing: 0.05em;
+        .pnp-card {
+            background-color: #1a222f; /* Matching the dark navy/slate in your screenshot */
+            border-radius: 1.5rem;
         }
     </style>
 </head>
-<body class="bg-black text-white">
+<body class="bg-black text-white bg-grid">
 
-    <!-- Header & Navigation (Consistent Nav) -->
-    <header class="fixed top-0 left-0 right-0 z-50 bg-black bg-opacity-70 backdrop-blur-md shadow-lg">
+    <!-- Header & Navigation -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-black bg-opacity-70 backdrop-blur-md border-b border-gray-800">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="index.html" class="flex items-center space-x-2">
                 <img src="https://grgames26.sirv.com/GRG%20website%20images/Gather%20Round%20Games%20logo.jpeg" alt="Gather Round Games Logo" class="h-8 rounded-full shadow-md">
                 <span class="text-xl font-bold title-font text-orange-500 hidden sm:block">Gather Round Games</span>
             </a>
-            <div class="space-x-4">
-                <a href="index.html#games" class="text-orange-500 hover:text-orange-400 transition-colors font-semibold">Our Games</a>
+            <div class="space-x-4 flex items-center">
+                <a href="index.html" class="text-orange-500 hover:text-orange-400 transition-colors font-semibold">Home</a>
                 <a href="index.html#about" class="text-orange-500 hover:text-orange-400 transition-colors font-semibold">About</a>
-                <a href="index.html#newsletter" class="text-orange-500 hover:text-orange-400 transition-colors font-semibold">Newsletter</a>
-                <!-- PnP Link in Nav (Active) -->
-                <a href="print_and_play.html" class="text-white bg-orange-500 py-1 px-3 rounded-full hover:bg-orange-600 transition-colors font-semibold">Print & Play</a>
+                <a href="dungeon_run.html" class="text-orange-500 hover:text-orange-400 transition-colors font-semibold">Dungeon Run</a>
+                <a href="blog.html" class="text-orange-500 hover:text-orange-400 transition-colors font-semibold">Blog</a>
+                <a href="print_and_play.html" class="text-white bg-orange-500 py-1 px-4 rounded-full hover:bg-orange-600 transition-colors font-semibold shadow-lg shadow-orange-500/20">P&P</a>
             </div>
         </nav>
     </header>
 
-    <main class="pt-24">
-        
-        <!-- Hero Section -->
-        <section class="bg-gray-900 text-white p-10 md:p-16 flex items-center justify-center relative min-h-[40vh] overflow-hidden">
-            <div class="container mx-auto text-center relative z-10">
-                <h1 class="text-6xl md:text-7xl font-black title-font leading-none text-orange-500">
-                    Print & Play Downloads
-                </h1>
-                <p class="mt-4 text-xl md:text-2xl font-semibold max-w-3xl mx-auto text-gray-300">
-                    Try before you buy! Download the components and rules for select games and start playing today. All you need is a printer and some scissors!
-                </p>
+    <main class="pt-32 pb-20">
+        <div class="container mx-auto px-6 max-w-5xl">
+            <div class="text-center mb-16">
+                <h1 class="text-5xl md:text-6xl font-bold title-font text-orange-500 mb-4 uppercase tracking-tighter">Print & Play</h1>
+                <p class="text-xl text-gray-400 max-w-2xl mx-auto">Download our latest prototypes and tabletop games instantly.</p>
+                <div id="auth-status" class="mt-4 text-xs font-mono text-gray-500 uppercase tracking-widest">Initialising Vault Access...</div>
             </div>
-        </section>
 
-        <!-- PnP Game Listings -->
-        <section class="container mx-auto px-6 py-16">
-            <h2 class="text-4xl md:text-5xl font-bold text-center mb-12 title-font text-white">Available Prototypes</h2>
-
-            <div class="space-y-12 max-w-4xl mx-auto">
-
-                <!-- Monster Matches PnP Card - UPDATED WITH PAYHIP LINK -->
-                <div class="bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl flex flex-col md:flex-row items-center gap-6">
-                    <div class="md:w-1/3">
+            <!-- Main Game Gallery (Vertical Stack) -->
+            <div id="pnp-grid" class="space-y-12">
+                
+                <!-- Monster Matches -->
+                <div class="pnp-card p-6 md:p-8 flex flex-col md:flex-row gap-8 items-center md:items-start border-2 border-orange-500/30">
+                    <div class="w-full md:w-1/3 aspect-square bg-white rounded-lg overflow-hidden flex items-center justify-center p-2 border-4 border-orange-500">
                         <img src="https://grgames26.sirv.com/GRG%20website%20images/subnover_Cute_cartoon_monster_trading_card_illustration_big_e_7fe63f19-50f0-415b-9423-ac514cf924fc_0%20(1).png" 
-                             alt="Monster Matches Box Art" 
-                             class="rounded-lg w-full h-auto object-cover border-4 border-orange-500">
+                             alt="Monster Matches Art" 
+                             class="w-full h-full object-contain">
                     </div>
-                    <div class="md:w-2/3">
-                        <h3 class="text-3xl font-bold title-font text-orange-500 mb-2">Monster Matches (Ages 4+)</h3>
-                        <p class="text-gray-300 mb-4">
-                            Get the current prototype cards for the Monster Matches card battle game. This version includes 20 unique monsters and the basic ruleset.
-                        </p>
-                        <ul class="list-disc list-inside text-gray-400 mb-6 space-y-1">
-                            <li><span class="font-semibold">Files Included:</span> 5-page PDF (Cards, Backs, Rules Summary)</li>
-                            <li><span class="font-semibold">Status:</span> Beta Testing Version (2.1)</li>
-                            <li><span class="font-semibold">Required:</span> Printer, Scissors, 2 Players</li>
+                    <div class="w-full md:w-2/3">
+                        <h2 class="text-3xl font-bold title-font text-orange-500 mb-2">Monster Matches (Ages 4+)</h2>
+                        <p class="text-gray-300 mb-4">Get the current prototype cards for the Monster Matches card battle game. This version includes 20 unique monsters and the basic ruleset.</p>
+                        <ul class="text-gray-400 space-y-1 mb-6 list-disc list-inside">
+                            <li><span class="font-semibold text-gray-300">Files Included:</span> 5-page PDF (Cards, Backs, Rules Summary)</li>
+                            <li><span class="font-semibold text-gray-300">Status:</span> Beta Testing Version (2.1)</li>
+                            <li><span class="font-semibold text-gray-300">Required:</span> Printer, Scissors, 2 Players</li>
                         </ul>
-                        <a href="https://payhip.com/b/DJr6R" target="_blank"
-                           class="inline-block bg-orange-500 text-black font-bold py-3 px-8 rounded-full shadow-lg hover:bg-orange-600 transition-colors transform hover:scale-105">
+                        <a href="https://payhip.com/b/DJr6R" target="_blank" class="inline-block bg-orange-600 text-white font-bold py-3 px-8 rounded-full hover:bg-orange-700 transition-all shadow-lg">
                             Download Monster Matches PnP
                         </a>
                     </div>
                 </div>
 
-                <!-- Race to Bed PnP Card -->
-                <div class="bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl flex flex-col md:flex-row items-center gap-6">
-                    <div class="md:w-1/3">
-                        <img src="https://grgames26.sirv.com/GRG%20website%20images/subnover_two_children_trying_racing_through_the_hallway._cart_53ce712b-c52b-4152-a6a5-a46946b9e36b_0.png" 
-                             alt="Race to Bed Box Art" 
-                             class="rounded-lg w-full h-auto object-cover border-4 border-yellow-400">
+                <!-- Race To Bed -->
+                <div class="pnp-card p-6 md:p-8 flex flex-col md:flex-row gap-8 items-center md:items-start border border-gray-800">
+                    <div class="w-full md:w-1/3 aspect-square bg-gray-800 rounded-lg overflow-hidden flex items-center justify-center p-2 border-4 border-yellow-500">
+                        <img src="https://grgames26.sirv.com/GRG%20website%20images/Race%20To%20Bed%20cover%20picture.png" 
+                             alt="Race To Bed Art" 
+                             class="w-full h-full object-cover rounded">
                     </div>
-                    <div class="md:w-2/3">
-                        <h3 class="text-3xl font-bold title-font text-yellow-400 mb-2">Race to Bed (Ages 5+)</h3>
-                        <p class="text-gray-300 mb-4">
-                            Download the full Print & Play files for the cooperative bedtime game. Includes the game board, movement cards, and distraction tokens.
-                        </p>
-                        <ul class="list-disc list-inside text-gray-400 mb-6 space-y-1">
-                            <li><span class="font-semibold">Files Included:</span> 8-page PDF (Board, 30 Cards, Rules)</li>
-                            <li><span class="font-semibold">Status:</span> Final Playtesting Version (1.0)</li>
-                            <li><span class="font-semibold">Required:</span> Printer, Glue (for tokens), 2-4 Players</li>
+                    <div class="w-full md:w-2/3">
+                        <h2 class="text-3xl font-bold title-font text-yellow-500 mb-2">Race to Bed (Ages 5+)</h2>
+                        <p class="text-gray-300 mb-4">Download the full Print & Play files for the cooperative bedtime game. Includes the game board, movement cards, and distraction tokens.</p>
+                        <ul class="text-gray-400 space-y-1 mb-6 list-disc list-inside">
+                            <li><span class="font-semibold text-gray-300">Files Included:</span> 8-page PDF (Board, 30 Cards, Rules)</li>
+                            <li><span class="font-semibold text-gray-300">Status:</span> Final Playtesting Version (1.0)</li>
+                            <li><span class="font-semibold text-gray-300">Required:</span> Printer, Glue (for tokens), 2-4 Players</li>
                         </ul>
-                        <!-- This link remains a placeholder until you provide a URL -->
-                        <a href="#" onclick="alert('This link would normally start a PDF download!'); return false;" 
-                           class="inline-block bg-yellow-400 text-black font-bold py-3 px-8 rounded-full shadow-lg hover:bg-yellow-300 transition-colors transform hover:scale-105">
+                        <a href="https://payhip.com/b/p7bT0" target="_blank" class="inline-block bg-yellow-500 text-black font-bold py-3 px-8 rounded-full hover:bg-yellow-600 transition-all shadow-lg">
                             Download Race to Bed PnP
                         </a>
                     </div>
                 </div>
-                
-            </div>
-            
-            <div class="text-center mt-12 pt-8 border-t border-gray-700">
-                 <h4 class="text-2xl font-bold text-gray-400 mb-4">Have Feedback?</h4>
-                 <p class="text-lg text-gray-500">
-                     We appreciate all feedback on our Print & Play prototypes. Please send your thoughts, comments, and bug reports to: josh@gatherroundgames.co.uk
-                 </p>
-            </div>
-        </section>
-        
-        <!-- Placeholder for Newsletter or Footer Hook -->
-        <section id="newsletter-hook" class="bg-gray-900 py-8">
-            <div class="container mx-auto px-6 text-center">
-                <p class="text-xl font-semibold text-gray-400">
-                    Don't miss the next PnP release! <a href="index.html#newsletter" class="text-orange-500 hover:text-orange-400 underline">Sign up for our Newsletter.</a>
-                </p>
-            </div>
-        </section>
 
+                <!-- Dynamic Container for other games -->
+                <div id="dynamic-pnp-container" class="space-y-12"></div>
+            </div>
+        </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-black text-white p-8 border-t border-gray-800">
+    <footer class="bg-black text-white p-12 border-t border-gray-800 mt-20">
         <div class="container mx-auto text-center">
-            <p>&copy; 2024 Gather Round Games. All rights reserved.</p>
-            <p class="mt-2 text-sm">Contact: josh@gatherroundgames.co.uk</p>
+            <p class="text-gray-600 text-sm tracking-widest uppercase">&copy; 2024 Gather Round Games. All rights reserved.</p>
         </div>
     </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        
+        let unsubscribe = null;
+
+        const updateStatus = (text) => {
+            const statusEl = document.getElementById('auth-status');
+            if (statusEl) statusEl.textContent = text;
+        };
+
+        // Rule 3: Auth Before Queries
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                updateStatus('Vault Access: Granted');
+                loadAdditionalGames(user.uid);
+            } else {
+                updateStatus('Vault Access: Locked');
+                if (unsubscribe) {
+                    unsubscribe();
+                    unsubscribe = null;
+                }
+            }
+        });
+
+        function loadAdditionalGames(userId) {
+            if (!auth.currentUser) return;
+
+            // Rule 1: Strict Paths - Using the mandatory public data path structure
+            const pnpCollection = collection(db, 'artifacts', appId, 'public', 'data', 'pnp_games');
+            
+            // Rule 2: No Complex Queries - Fetching all and handling in memory
+            unsubscribe = onSnapshot(pnpCollection, (snapshot) => {
+                const container = document.getElementById('dynamic-pnp-container');
+                if (!container) return;
+                
+                if (snapshot.empty) {
+                    container.innerHTML = "";
+                    return;
+                }
+
+                container.innerHTML = snapshot.docs.map(doc => {
+                    const game = doc.data();
+                    return `
+                        <div class="pnp-card p-6 md:p-8 flex flex-col md:flex-row gap-8 items-center md:items-start border border-gray-800">
+                            <div class="w-full md:w-1/3 aspect-square bg-gray-800 rounded-lg overflow-hidden flex items-center justify-center p-2 border-4 border-gray-700">
+                                <img src="${game.image || 'https://via.placeholder.com/600x600'}" class="w-full h-full object-cover rounded">
+                            </div>
+                            <div class="w-full md:w-2/3">
+                                <h2 class="text-3xl font-bold title-font text-white mb-2">${game.title}</h2>
+                                <p class="text-gray-300 mb-4">${game.description}</p>
+                                <ul class="text-gray-400 space-y-1 mb-6 list-disc list-inside">
+                                    <li><span class="font-semibold text-gray-300">Files Included:</span> Digital Download</li>
+                                    <li><span class="font-semibold text-gray-300">Status:</span> Community Upload</li>
+                                </ul>
+                                <a href="${game.downloadUrl || '#'}" class="inline-block bg-gray-700 text-white font-bold py-3 px-8 rounded-full hover:bg-gray-600 transition-all shadow-lg">
+                                    Download ${game.title} PnP
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }, (err) => {
+                console.error("Firestore error:", err);
+                updateStatus('Vault Error: Permission Denied');
+            });
+        }
+
+        const initAuth = async () => {
+            try {
+                // Rule 3: Use custom token if available, fallback to anonymous
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    try {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } catch (tokenErr) {
+                        console.warn("Token auth failed, trying anonymous");
+                        await signInAnonymously(auth);
+                    }
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (e) {
+                console.error("Auth init failed:", e);
+                updateStatus('Vault Error: Auth Failed');
+            }
+        };
+
+        window.addEventListener('load', initAuth);
+    </script>
 </body>
 </html>
